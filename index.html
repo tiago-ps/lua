@@ -29,9 +29,8 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:#101b35;color:#fff}
 main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 20px;text-align:center}
-header{width:min(100%,900px);display:flex;justify-content:space-between;align-items:center}
-h1{font-size:clamp(2.2rem,7vw,4.4rem);margin:8px 0 0}
-#date{font-size:clamp(1.1rem,3vw,1.7rem);color:#d7e1f8;margin:5px 0}
+h1{font-size:clamp(2.1rem,7vw,4rem);line-height:1.15;margin:8px 0 4px;color:#fff}
+#date{font-size:inherit;color:inherit;margin:0}
 #moon{width:min(58vw,330px);height:auto;margin:10px 0;filter:drop-shadow(0 0 28px #dce8ff55)}
 #phase{font-size:clamp(2rem,7vw,4.2rem);font-weight:800;margin:0}
 #description{font-size:clamp(1.2rem,3.5vw,1.8rem);line-height:1.4;max-width:760px;color:#e3eaff;margin:10px auto 18px}
@@ -42,14 +41,12 @@ button.primary{background:#f4d77c}
 button:focus-visible{outline:4px solid #7ed6ff;outline-offset:4px}
 button.small{font-size:1rem;min-height:48px;padding:10px 15px}
 .hint{margin-top:18px;color:#b9c8e8;font-size:1.05rem}
-@media(orientation:landscape) and (min-width:700px){main{padding:8px 24px}h1{margin:2px 0}#moon{width:min(36vh,250px);margin:2px}#description{margin:4px auto 8px}.nav{margin:2px 0 8px}.hint{margin-top:8px}}
+@media(orientation:landscape) and (min-width:700px){main{padding:8px 24px}h1{margin:2px 0 4px}#moon{width:min(36vh,250px);margin:2px}#description{margin:4px auto 8px}.nav{margin:2px 0 8px}}
 </style>
 </head>
 <body>
 <main>
-<header><span aria-hidden="true" style="font-size:1.8rem">🌙</span><button class="small" id="fullscreen" type="button">📺 Tela cheia</button></header>
-<h1>Minha Lua</h1>
-<div id="date" aria-live="polite"></div>
+<h1 id="date" aria-live="polite"></h1>
 <svg id="moon" viewBox="0 0 300 300" role="img" aria-label="Lua">
 <defs><clipPath id="moonClip"><circle cx="150" cy="150" r="112"/></clipPath></defs>
 <circle cx="150" cy="150" r="112" fill="#263653"/>
@@ -64,7 +61,6 @@ button.small{font-size:1rem;min-height:48px;padding:10px 15px}
 <button id="next" type="button">Amanhã ▶</button>
 </div>
 <div class="actions"><button class="primary" id="speak" type="button">🔊 Ouvir</button><button id="install" type="button">📲 Instalar</button></div>
-<div class="hint">Toque em “Ouvir” para escutar.</div>
 <section id="installHelp" hidden style="width:min(100%,700px);margin-top:16px;padding:18px;border-radius:18px;background:#243657;font-size:1.1rem;line-height:1.5"><p style="margin-top:0;font-weight:bold">Como colocar no celular</p><p id="installSteps" style="margin-bottom:12px">Abra o menu do navegador e escolha “Adicionar à tela inicial” ou “Instalar aplicativo”.</p><button id="closeInstall" class="small" type="button">Fechar</button></section>
 </main>
 <script>
@@ -87,7 +83,6 @@ function render(){
 const age=((shown.getTime()-reference)/86400000%synodic+synodic)%synodic;
 const fraction=age/synodic;
 const index=Math.round(fraction*8)%8;
-const illumination=(1-Math.cos(2*Math.PI*fraction))/2;
 const waxing=fraction<.5;
 const lit=el("lit");lit.innerHTML="";
 if(index!==0){
@@ -137,10 +132,6 @@ el("install").addEventListener("click",async()=>{
  el("installHelp").hidden=false;
 });
 el("closeInstall").addEventListener("click",()=>{el("installHelp").hidden=true;});
-el("fullscreen").addEventListener("click",async()=>{
-try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();}else{await document.exitFullscreen();}}
-catch(error){alert("A tela cheia não está disponível neste aparelho.");}
-});
 if("serviceWorker" in navigator && location.protocol==="https:"){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
 render();
 })();
