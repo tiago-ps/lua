@@ -29,19 +29,23 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;background:#101b35;color:#fff}
 main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 20px;text-align:center}
-h1{font-size:clamp(2.7rem,9vw,5rem);line-height:1.12;margin:8px 0 8px;color:#fff}
+h1{font-size:clamp(3.3rem,11vw,6rem);line-height:1.08;margin:8px 0 8px;color:#fff}
 #date{font-size:inherit;color:inherit;margin:0}
 #moon{width:min(58vw,330px);height:auto;margin:10px 0;filter:drop-shadow(0 0 28px #dce8ff55)}
 #phase{font-size:clamp(2rem,7vw,4.2rem);font-weight:800;margin:0}
-#description{font-size:clamp(1.2rem,3.5vw,1.8rem);line-height:1.4;max-width:760px;color:#e3eaff;margin:10px auto 18px}
+#description{font-size:clamp(1.2rem,3.5vw,1.8rem);line-height:1.4;max-width:760px;color:#e3eaff;margin:10px auto 8px}
+#seasonTip{font-size:clamp(1.05rem,3vw,1.35rem);line-height:1.4;max-width:760px;color:#d5e2fa;margin:0 auto 14px}
+#source{font-size:.9rem;line-height:1.4;color:#aebfdf;max-width:760px;margin:0 auto 14px}
+#source a{color:#d7e5ff;text-decoration:underline}
 .nav,.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:min(100%,850px)}
 .nav{margin:5px 0 16px}
 button{border:0;border-radius:18px;padding:15px 22px;min-height:62px;font-size:clamp(1.05rem,3vw,1.4rem);font-weight:700;color:#101b35;background:#f3f5fb;cursor:pointer}
 button.primary{background:#f4d77c}
 button:focus-visible{outline:4px solid #7ed6ff;outline-offset:4px}
 button.small{font-size:1rem;min-height:48px;padding:10px 15px}
+button:disabled{cursor:not-allowed}
 .hint{margin-top:18px;color:#b9c8e8;font-size:1.05rem}
-@media(orientation:landscape) and (min-width:700px){main{padding:8px 24px}h1{margin:2px 0 4px}#moon{width:min(36vh,250px);margin:2px}#description{margin:4px auto 8px}.nav{margin:2px 0 8px}}
+@media(orientation:landscape) and (min-width:700px){main{padding:8px 24px}h1{font-size:clamp(2.8rem,8vh,4.8rem);margin:2px 0 4px}#moon{width:min(30vh,220px);margin:2px}#description{margin:4px auto 6px}#seasonTip{margin-bottom:6px}.nav{margin:2px 0 8px}}
 </style>
 </head>
 <body>
@@ -55,6 +59,8 @@ button.small{font-size:1rem;min-height:48px;padding:10px 15px}
 </svg>
 <p id="phase">Carregando...</p>
 <p id="description">Veja como a Lua está hoje.</p>
+<p id="seasonTip"></p>
+<p id="source">As dicas ligadas à Lua são tradições populares, não regras científicas. Para escolher a época de plantio, consulte a <a href="https://www.embrapa.br/" target="_blank" rel="noopener">Embrapa</a>.</p>
 <div class="nav">
 <button id="prev" type="button">◀ Ontem</button>
 <button id="today" class="primary" type="button">Hoje</button>
@@ -70,98 +76,79 @@ const reference=Date.UTC(2000,0,6,18,14);
 let shown=new Date();shown.setHours(12,0,0,0);
 const today=new Date();today.setHours(12,0,0,0);
 function shiftMonths(date,months){
- const result=new Date(date);
- const day=result.getDate();
+ const result=new Date(date);const day=result.getDate();
  result.setDate(1);result.setMonth(result.getMonth()+months);
  const lastDay=new Date(result.getFullYear(),result.getMonth()+1,0).getDate();
- result.setDate(Math.min(day,lastDay));
- return result;
+ result.setDate(Math.min(day,lastDay));return result;
 }
 const minDate=shiftMonths(today,-6),maxDate=shiftMonths(today,6);
 const phases=[
-["Lua nova","Ela aparece como um pequeno brilho no céu."],
-["Lua crescendo","A parte clara está aumentando."],
-["Lua crescendo","A parte clara está aumentando."],
-["Lua crescendo","A parte clara está aumentando."],
-["Lua cheia","Ela aparece redonda e bem iluminada."],
-["Lua diminuindo","A parte clara está diminuindo."],
-["Lua diminuindo","A parte clara está diminuindo."],
-["Lua diminuindo","A parte clara está diminuindo."]
+ {name:"Lua nova",tip:"Na tradição popular, é tempo de preparar a horta. Revolva a terra com cuidado e misture composto bem curtido."},
+ {name:"Lua crescendo",tip:"A tradição associa esta fase ao crescimento das folhas. Observe as mudas e regue quando a superfície da terra começar a secar."},
+ {name:"Lua crescente",tip:"Na tradição popular, é uma fase ligada ao desenvolvimento das plantas. Retire ervas daninhas sem machucar as raízes."},
+ {name:"Lua quase cheia",tip:"A tradição recomenda atenção às plantas em crescimento. Amarre os ramos que precisam de apoio e confira se há pragas."},
+ {name:"Lua cheia",tip:"Na tradição popular, é um período associado à colheita. Colha com cuidado os alimentos maduros e retire folhas secas."},
+ {name:"Lua diminuindo",tip:"A tradição associa esta fase às raízes. Mantenha o solo fofo e confira se a água consegue escoar bem."},
+ {name:"Lua minguante",tip:"Na tradição popular, é um bom momento para cuidar do terreno. Faça uma limpeza leve e coloque folhas secas sobre a terra."},
+ {name:"Lua minguante",tip:"A tradição sugere descanso e manutenção da horta. Prepare o composto e retire apenas galhos secos ou doentes."}
 ];
 const el=id=>document.getElementById(id);
 function render(){
-const age=((shown.getTime()-reference)/86400000%synodic+synodic)%synodic;
-const fraction=age/synodic;
-const index=Math.round(fraction*8)%8;
-const waxing=fraction<.5;
-const lit=el("lit");lit.innerHTML="";
-if(index!==0){
-const bright=document.createElementNS("http://www.w3.org/2000/svg","circle");
-bright.setAttribute("cx","150");bright.setAttribute("cy","150");bright.setAttribute("r","112");bright.setAttribute("fill","#f4e7b6");lit.appendChild(bright);
-if(index!==4){
-const rx=Math.max(1,Math.abs(Math.cos(2*Math.PI*fraction))*112);
-const shadow=document.createElementNS("http://www.w3.org/2000/svg","path");
-if(waxing){
-shadow.setAttribute("d","M150 38 A112 112 0 1 0 150 262 A"+rx+" 112 0 0 1 150 38");
-}else{
-shadow.setAttribute("d","M150 38 A112 112 0 1 1 150 262 A"+rx+" 112 0 0 0 150 38");
+ const age=((shown.getTime()-reference)/86400000%synodic+synodic)%synodic;
+ const fraction=age/synodic;
+ const index=Math.round(fraction*8)%8;
+ const waxing=fraction<.5;
+ const lit=el("lit");lit.innerHTML="";
+ if(index!==0){
+  const bright=document.createElementNS("http://www.w3.org/2000/svg","circle");
+  bright.setAttribute("cx","150");bright.setAttribute("cy","150");bright.setAttribute("r","112");bright.setAttribute("fill","#f4e7b6");lit.appendChild(bright);
+  if(index!==4){
+   const rx=Math.max(1,Math.abs(Math.cos(2*Math.PI*fraction))*112);
+   const shadow=document.createElementNS("http://www.w3.org/2000/svg","path");
+   if(waxing)shadow.setAttribute("d","M150 38 A112 112 0 1 0 150 262 A"+rx+" 112 0 0 1 150 38");
+   else shadow.setAttribute("d","M150 38 A112 112 0 1 1 150 262 A"+rx+" 112 0 0 0 150 38");
+   shadow.setAttribute("fill","#263653");lit.appendChild(shadow);
+  }
+ }
+ const info=phases[index];
+ el("phase").textContent=info.name;
+ const dateText=shown.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+ el("date").textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);
+ el("description").textContent=info.tip;
+ const month=shown.getMonth();
+ el("seasonTip").textContent=(month>=9||month<=2)
+  ?"Dica da época: com as chuvas, veja se a água está escoando e evite deixar a terra encharcada."
+  :"Dica da época: em meses mais secos, cubra a terra com folhas secas e regue quando ela começar a secar.";
+ el("moon").setAttribute("aria-label",info.name);
+ el("prev").disabled=shown<=minDate;el("next").disabled=shown>=maxDate;
+ el("prev").style.opacity=el("prev").disabled?".45":"1";
+ el("next").style.opacity=el("next").disabled?".45":"1";
 }
-shadow.setAttribute("fill","#263653");lit.appendChild(shadow);
-}
-}
-el("phase").textContent=phases[index][0];
-let dateText=shown.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
-el("date").textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);
-el("description").textContent=phases[index][1];
-el("moon").setAttribute("aria-label",phases[index][0]);
-el("prev").disabled=shown<=minDate;
-el("next").disabled=shown>=maxDate;
-el("prev").style.opacity=el("prev").disabled?".45":"1";
-el("next").style.opacity=el("next").disabled?".45":"1";
-}
-function move(days){
- const next=new Date(shown);next.setDate(next.getDate()+days);
- if(next<minDate||next>maxDate)return;
- shown=next;render();
-}
+function move(days){const next=new Date(shown);next.setDate(next.getDate()+days);if(next<minDate||next>maxDate)return;shown=next;render();}
 el("prev").addEventListener("click",()=>move(-1));
 el("next").addEventListener("click",()=>move(1));
 el("today").addEventListener("click",()=>{shown=new Date();shown.setHours(12,0,0,0);render();});
 el("speak").addEventListener("click",()=>{
-if(!("speechSynthesis" in window)){alert("Este aparelho não tem leitura em voz alta.");return;}
-speechSynthesis.cancel();
-const utterance=new SpeechSynthesisUtterance(el("phase").textContent+". "+el("date").textContent+". "+el("description").textContent);
-utterance.lang="pt-BR";utterance.rate=.88;speechSynthesis.speak(utterance);
+ if(!("speechSynthesis" in window)){alert("Este aparelho não tem leitura em voz alta.");return;}
+ speechSynthesis.cancel();
+ const utterance=new SpeechSynthesisUtterance(el("phase").textContent+". "+el("date").textContent+". "+el("description").textContent+" "+el("seasonTip").textContent);
+ utterance.lang="pt-BR";utterance.rate=.88;speechSynthesis.speak(utterance);
 });
 let installPrompt=null;
-function isInstalled(){
- return window.matchMedia("(display-mode: standalone)").matches ||
-        window.matchMedia("(display-mode: fullscreen)").matches ||
-        navigator.standalone===true;
-}
+function isInstalled(){return window.matchMedia("(display-mode: standalone)").matches||window.matchMedia("(display-mode: fullscreen)").matches||navigator.standalone===true;}
 if(isInstalled())el("install").hidden=true;
-window.addEventListener("appinstalled",()=>{
- el("install").hidden=true;
- el("installHelp").hidden=true;
- installPrompt=null;
-});
+window.addEventListener("appinstalled",()=>{el("install").hidden=true;el("installHelp").hidden=true;installPrompt=null;});
 window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPrompt=event;});
 el("install").addEventListener("click",async()=>{
- if(installPrompt){
-  installPrompt.prompt();
-  await installPrompt.userChoice;
-  installPrompt=null;
-  return;
- }
+ if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;return;}
  const ua=navigator.userAgent;
  let steps="Abra o menu do navegador (os três pontinhos) e escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.";
- if(/iPhone|iPad|iPod/i.test(ua)) steps="No Safari, toque em “Compartilhar” (o quadrado com a seta para cima). Depois escolha “Adicionar à Tela de Início” e toque em “Adicionar”.";
- else if(/Android/i.test(ua)) steps="No Chrome, toque nos três pontinhos no alto da tela. Escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.";
- el("installSteps").textContent=steps;
- el("installHelp").hidden=false;
+ if(/iPhone|iPad|iPod/i.test(ua))steps="No Safari, toque em “Compartilhar” (o quadrado com a seta para cima). Depois escolha “Adicionar à Tela de Início” e toque em “Adicionar”.";
+ else if(/Android/i.test(ua))steps="No Chrome, toque nos três pontinhos no alto da tela. Escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.";
+ el("installSteps").textContent=steps;el("installHelp").hidden=false;
 });
 el("closeInstall").addEventListener("click",()=>{el("installHelp").hidden=true;});
-if("serviceWorker" in navigator && location.protocol==="https:"){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
+if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
 render();
 })();
 </script>
