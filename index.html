@@ -63,8 +63,9 @@ button.small{font-size:1rem;min-height:48px;padding:10px 15px}
 <button id="today" class="primary" type="button">Hoje</button>
 <button id="next" type="button">Amanhã ▶</button>
 </div>
-<div class="actions"><button class="primary" id="speak" type="button">🔊 Ouvir</button><button id="install" type="button" hidden>⬇ Instalar no celular</button></div>
+<div class="actions"><button class="primary" id="speak" type="button">🔊 Ouvir</button><button id="install" type="button">📲 Instalar</button></div>
 <div class="hint">Toque em “Ouvir” para escutar.</div>
+<section id="installHelp" hidden style="width:min(100%,700px);margin-top:16px;padding:18px;border-radius:18px;background:#243657;font-size:1.1rem;line-height:1.5"><p style="margin-top:0;font-weight:bold">Como colocar no celular</p><p id="installSteps" style="margin-bottom:12px">Abra o menu do navegador e escolha “Adicionar à tela inicial” ou “Instalar aplicativo”.</p><button id="closeInstall" class="small" type="button">Fechar</button></section>
 </main>
 <script>
 (function(){
@@ -106,8 +107,8 @@ shadow.setAttribute("fill","#263653");lit.appendChild(shadow);
 el("phase").textContent=phases[index][0];
 let dateText=shown.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 el("date").textContent=dateText.charAt(0).toUpperCase()+dateText.slice(1);
-el("description").textContent=phases[index][1]+" Cerca de "+Math.round(illumination*100)+"% iluminada.";
-el("moon").setAttribute("aria-label",phases[index][0]+", "+Math.round(illumination*100)+"% iluminada");
+el("description").textContent=phases[index][1];
+el("moon").setAttribute("aria-label",phases[index][0]);
 }
 function move(days){shown.setDate(shown.getDate()+days);render();}
 el("prev").addEventListener("click",()=>move(-1));
@@ -120,8 +121,22 @@ const utterance=new SpeechSynthesisUtterance(el("phase").textContent+". "+el("da
 utterance.lang="pt-BR";utterance.rate=.88;speechSynthesis.speak(utterance);
 });
 let installPrompt=null;
-window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPrompt=event;el("install").hidden=false;});
-el("install").addEventListener("click",async()=>{if(!installPrompt)return;installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;el("install").hidden=true;});
+window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();installPrompt=event;});
+el("install").addEventListener("click",async()=>{
+ if(installPrompt){
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt=null;
+  return;
+ }
+ const ua=navigator.userAgent;
+ let steps="Abra o menu do navegador (os três pontinhos) e escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.";
+ if(/iPhone|iPad|iPod/i.test(ua)) steps="No Safari, toque em “Compartilhar” (o quadrado com a seta para cima). Depois escolha “Adicionar à Tela de Início” e toque em “Adicionar”.";
+ else if(/Android/i.test(ua)) steps="No Chrome, toque nos três pontinhos no alto da tela. Escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.";
+ el("installSteps").textContent=steps;
+ el("installHelp").hidden=false;
+});
+el("closeInstall").addEventListener("click",()=>{el("installHelp").hidden=true;});
 el("fullscreen").addEventListener("click",async()=>{
 try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();}else{await document.exitFullscreen();}}
 catch(error){alert("A tela cheia não está disponível neste aparelho.");}
