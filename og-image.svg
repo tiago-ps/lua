@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<defs><radialGradient id="glow"><stop stop-color="#f8e9b7" stop-opacity=".32"/><stop offset="1" stop-color="#f8e9b7" stop-opacity="0"/></radialGradient></defs>
+<rect width="1200" height="630" fill="#101b35"/>
+<circle cx="850" cy="315" r="290" fill="url(#glow)"/>
+<circle cx="850" cy="315" r="190" fill="#f4e7b6"/>
+<circle cx="930" cy="240" r="190" fill="#101b35"/>
+<text x="90" y="270" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="92" font-weight="700">Minha Lua</text>
+<text x="96" y="355" fill="#d7e1f8" font-family="Arial,Helvetica,sans-serif" font-size="38">Veja a fase da Lua de um jeito simples</text>
+<text x="96" y="425" fill="#f4d77c" font-family="Arial,Helvetica,sans-serif" font-size="30">Ontem • Hoje • Amanhã</text>
+</svg>
