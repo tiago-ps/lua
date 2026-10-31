@@ -30,13 +30,11 @@
 body{margin:0;min-height:100vh;background:#101b35;color:#fff}
 main{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 20px;text-align:center}
 h1{font-size:clamp(3.3rem,11vw,6rem);line-height:1.08;margin:8px 0 8px;color:#fff}
-#date{font-size:inherit;color:inherit;margin:0}
+#date{font-size:clamp(3.8rem,13vw,6.5rem)!important;line-height:1.08;color:inherit;margin:0;font-weight:800}
 #moon{width:min(58vw,330px);height:auto;margin:10px 0;filter:drop-shadow(0 0 28px #dce8ff55)}
 #phase{font-size:clamp(2rem,7vw,4.2rem);font-weight:800;margin:0}
 #description{font-size:clamp(1.2rem,3.5vw,1.8rem);line-height:1.4;max-width:760px;color:#e3eaff;margin:10px auto 8px}
 #seasonTip{font-size:clamp(1.05rem,3vw,1.35rem);line-height:1.4;max-width:760px;color:#d5e2fa;margin:0 auto 14px}
-#source{font-size:.9rem;line-height:1.4;color:#aebfdf;max-width:760px;margin:0 auto 14px}
-#source a{color:#d7e5ff;text-decoration:underline}
 .nav,.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:min(100%,850px)}
 .nav{margin:5px 0 16px}
 button{border:0;border-radius:18px;padding:15px 22px;min-height:62px;font-size:clamp(1.05rem,3vw,1.4rem);font-weight:700;color:#101b35;background:#f3f5fb;cursor:pointer}
@@ -45,7 +43,7 @@ button:focus-visible{outline:4px solid #7ed6ff;outline-offset:4px}
 button.small{font-size:1rem;min-height:48px;padding:10px 15px}
 button:disabled{cursor:not-allowed}
 .hint{margin-top:18px;color:#b9c8e8;font-size:1.05rem}
-@media(orientation:landscape) and (min-width:700px){main{padding:8px 24px}h1{font-size:clamp(2.8rem,8vh,4.8rem);margin:2px 0 4px}#moon{width:min(30vh,220px);margin:2px}#description{margin:4px auto 6px}#seasonTip{margin-bottom:6px}.nav{margin:2px 0 8px}}
+@media(orientation:landscape) and (min-width:700px){main{padding:8px 24px}#date{font-size:clamp(3.4rem,10vh,5.5rem)!important;line-height:1.05}h1{margin:2px 0 4px}#moon{width:min(30vh,220px);margin:2px}#description{margin:4px auto 6px}#seasonTip{margin-bottom:6px}.nav{margin:2px 0 8px}}
 </style>
 </head>
 <body>
@@ -60,7 +58,6 @@ button:disabled{cursor:not-allowed}
 <p id="phase">Carregando...</p>
 <p id="description">Veja como a Lua está hoje.</p>
 <p id="seasonTip"></p>
-<p id="source">As dicas ligadas à Lua são tradições populares, não regras científicas. Veja as <a href="https://ainfo.cnptia.embrapa.br/digital/bitstream/item/176051/1/HORTA-EM-PEQUENOS-ESPACOS-4-IMP-2017.pdf" target="_blank" rel="noopener">orientações de cultivo da Embrapa</a> e o <a href="https://www.plantiocerto.cnptia.embrapa.br/" target="_blank" rel="noopener">calendário Plantio Certo</a>.</p>
 <div class="nav">
 <button id="prev" type="button">◀ Ontem</button>
 <button id="today" class="primary" type="button">Hoje</button>
@@ -83,14 +80,14 @@ function shiftMonths(date,months){
 }
 const minDate=shiftMonths(today,-6),maxDate=shiftMonths(today,6);
 const phases=[
- {name:"Lua nova",tip:"Na tradição popular, é tempo de preparar a horta. Revolva a terra com cuidado e misture composto bem curtido."},
- {name:"Lua crescendo",tip:"A tradição associa esta fase ao crescimento das folhas. Observe as mudas e regue quando a superfície da terra começar a secar."},
- {name:"Lua crescente",tip:"Na tradição popular, é uma fase ligada ao desenvolvimento das plantas. Retire ervas daninhas sem machucar as raízes."},
- {name:"Lua quase cheia",tip:"A tradição recomenda atenção às plantas em crescimento. Amarre os ramos que precisam de apoio e confira se há pragas."},
- {name:"Lua cheia",tip:"Na tradição popular, é um período associado à colheita. Colha com cuidado os alimentos maduros e retire folhas secas."},
- {name:"Lua diminuindo",tip:"A tradição associa esta fase às raízes. Mantenha o solo fofo e confira se a água consegue escoar bem."},
- {name:"Lua minguante",tip:"Na tradição popular, é um bom momento para cuidar do terreno. Faça uma limpeza leve e coloque folhas secas sobre a terra."},
- {name:"Lua minguante",tip:"A tradição sugere descanso e manutenção da horta. Prepare o composto e retire apenas galhos secos ou doentes."}
+ {name:"Lua nova",tip:"Prepare a terra para o plantio. Misture composto bem curtido e deixe o canteiro pronto."},
+ {name:"Lua crescendo",tip:"Cuide das plantas que estão crescendo. Regue quando a terra começar a secar."},
+ {name:"Lua crescente",tip:"É um bom momento para cuidar das folhas e dos brotos. Retire o mato com cuidado."},
+ {name:"Lua quase cheia",tip:"Observe as plantas e amarre os ramos que precisam de apoio. Veja se há insetos nas folhas."},
+ {name:"Lua cheia",tip:"Aproveite para colher os alimentos maduros. Retire também as folhas secas."},
+ {name:"Lua diminuindo",tip:"Cuide das raízes. Deixe a terra fofa e veja se a água consegue escoar."},
+ {name:"Lua minguante",tip:"Limpe os canteiros e coloque folhas secas sobre a terra para protegê-la."},
+ {name:"Lua minguante",tip:"Prepare adubo com restos de folhas e retire galhos secos ou doentes."}
 ];
 const el=id=>document.getElementById(id);
 function render(){
