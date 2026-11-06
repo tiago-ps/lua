@@ -96,23 +96,35 @@ const phases=[
  {name:"Lua minguante",tip:"Prepare adubo com restos de folhas e retire galhos secos ou doentes."}
 ];
 const el=id=>document.getElementById(id);
+function drawMoon(fraction){
+ const lit=el("lit");lit.innerHTML="";
+ const ns="http://www.w3.org/2000/svg",r=112,cx=150,cy=150;
+ const add=(tag,attrs)=>{const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));lit.appendChild(n);return n;};
+ if(fraction<=.02||fraction>=.98)return;
+ if(Math.abs(fraction-.5)<.02){add("circle",{cx,cy,r,fill:"#f4e7b6"});return;}
+ const waxing=fraction<.5;
+ const litFraction=(1-Math.cos(2*Math.PI*fraction))/2;
+ const rx=r*Math.abs(Math.cos(2*Math.PI*fraction));
+ const points=[];
+ const start=waxing?-Math.PI/2:Math.PI/2;
+ const end=waxing?Math.PI/2:3*Math.PI/2;
+ for(let i=0;i<=40;i++){
+  const t=start+(end-start)*i/40;
+  points.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);
+ }
+ const sign=waxing?1:-1;
+ for(let i=0;i<=40;i++){
+  const t=waxing?Math.PI/2-Math.PI*i/40:3*Math.PI/2-Math.PI*i/40;
+  points.push([cx+sign*r*Math.cos(2*Math.PI*fraction)*Math.cos(t),cy+r*Math.sin(t)]);
+ }
+ const d=points.map((p,i)=>(i?"L":"M")+p[0].toFixed(2)+" "+p[1].toFixed(2)).join(" ")+" Z";
+ add("path",{d,fill:"#f4e7b6"});
+}
 function render(){
  const age=((shown.getTime()-reference)/86400000%synodic+synodic)%synodic;
  const fraction=age/synodic;
  const index=Math.round(fraction*8)%8;
- const waxing=fraction<.5;
- const lit=el("lit");lit.innerHTML="";
- if(index!==0){
-  const bright=document.createElementNS("http://www.w3.org/2000/svg","circle");
-  bright.setAttribute("cx","150");bright.setAttribute("cy","150");bright.setAttribute("r","112");bright.setAttribute("fill","#f4e7b6");lit.appendChild(bright);
-  if(index!==4){
-   const rx=Math.max(1,Math.abs(Math.cos(2*Math.PI*fraction))*112);
-   const shadow=document.createElementNS("http://www.w3.org/2000/svg","path");
-   if(waxing)shadow.setAttribute("d","M150 38 A112 112 0 1 0 150 262 A"+rx+" 112 0 0 1 150 38");
-   else shadow.setAttribute("d","M150 38 A112 112 0 1 1 150 262 A"+rx+" 112 0 0 0 150 38");
-   shadow.setAttribute("fill","#263653");lit.appendChild(shadow);
-  }
- }
+ drawMoon(fraction);
  const info=phases[index];
  el("phase").textContent=info.name;
  const dateText=shown.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
