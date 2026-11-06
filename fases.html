@@ -65,18 +65,12 @@ function moonSvg(target){
  if(target<=.02||target>=.98)return svg;
  const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("clip-path","url(#clip)");
  const ns="http://www.w3.org/2000/svg",r=112,cx=150,cy=150;
- const add=(tag,attrs)=>{const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));g.appendChild(n);};
- if(Math.abs(target-.5)<.02){add("circle",{cx,cy,r,fill:"#f4e7b6"});}
- else{
-  const waxing=target<.5,points=[];
-  const start=waxing?-Math.PI/2:Math.PI/2,end=waxing?Math.PI/2:3*Math.PI/2;
-  for(let i=0;i<=40;i++){const t=start+(end-start)*i/40;points.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}
-  const sign=waxing?1:-1;
-  for(let i=0;i<=40;i++){const t=waxing?Math.PI/2-Math.PI*i/40:3*Math.PI/2-Math.PI*i/40;points.push([cx+sign*r*Math.cos(2*Math.PI*target)*Math.cos(t),cy+r*Math.sin(t)]);}
-  const d=points.map((p,i)=>(i?"L":"M")+p[0].toFixed(2)+" "+p[1].toFixed(2)).join(" ")+" Z";
-  add("path",{d,fill:"#f4e7b6"});
- }
- svg.appendChild(g);return svg;
+ const bright=document.createElementNS(ns,"circle");bright.setAttribute("cx",cx);bright.setAttribute("cy",cy);bright.setAttribute("r",r);bright.setAttribute("fill","#f4e7b6");g.appendChild(bright);
+ const rx=Math.max(1,Math.abs(Math.cos(2*Math.PI*target))*r);
+ const shadow=document.createElementNS(ns,"path");
+ if(target<.5)shadow.setAttribute("d","M150 38 A112 112 0 1 0 150 262 A"+rx+" 112 0 0 1 150 38");
+ else if(target>.5)shadow.setAttribute("d","M150 38 A112 112 0 1 1 150 262 A"+rx+" 112 0 0 0 150 38");
+ shadow.setAttribute("fill","#263653");g.appendChild(shadow);svg.appendChild(g);return svg;
 }
 const base=baseDate();
 document.getElementById("intro").textContent="A partir de "+base.toLocaleDateString("pt-BR",{day:"numeric",month:"long"})+", veja quando serão as próximas quatro fases.";
