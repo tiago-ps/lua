@@ -62,18 +62,21 @@ function moonSvg(target){
  const clip=document.createElementNS("http://www.w3.org/2000/svg","clipPath");clip.id="clip";
  const circle=document.createElementNS("http://www.w3.org/2000/svg","circle");circle.setAttribute("cx","150");circle.setAttribute("cy","150");circle.setAttribute("r","112");clip.appendChild(circle);defs.appendChild(clip);svg.appendChild(defs);
  const base=document.createElementNS("http://www.w3.org/2000/svg","circle");base.setAttribute("cx","150");base.setAttribute("cy","150");base.setAttribute("r","112");base.setAttribute("fill","#263653");svg.appendChild(base);
+ if(target<=.02||target>=.98)return svg;
  const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("clip-path","url(#clip)");
- const bright=document.createElementNS("http://www.w3.org/2000/svg","circle");bright.setAttribute("cx","150");bright.setAttribute("cy","150");bright.setAttribute("r","112");bright.setAttribute("fill","#f4e7b6");g.appendChild(bright);
- const f=target;
- if(f>0&&f<1){
-  const rx=Math.max(1,Math.abs(Math.cos(2*Math.PI*f))*112);
-  const shadow=document.createElementNS("http://www.w3.org/2000/svg","path");
-  if(f<.5)shadow.setAttribute("d","M150 38 A112 112 0 1 0 150 262 A"+rx+" 112 0 0 1 150 38");
-  else shadow.setAttribute("d","M150 38 A112 112 0 1 1 150 262 A"+rx+" 112 0 0 0 150 38");
-  shadow.setAttribute("fill","#263653");g.appendChild(shadow);
+ const ns="http://www.w3.org/2000/svg",r=112,cx=150,cy=150;
+ const add=(tag,attrs)=>{const n=document.createElementNS(ns,tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));g.appendChild(n);};
+ if(Math.abs(target-.5)<.02){add("circle",{cx,cy,r,fill:"#f4e7b6"});}
+ else{
+  const waxing=target<.5,points=[];
+  const start=waxing?-Math.PI/2:Math.PI/2,end=waxing?Math.PI/2:3*Math.PI/2;
+  for(let i=0;i<=40;i++){const t=start+(end-start)*i/40;points.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}
+  const sign=waxing?1:-1;
+  for(let i=0;i<=40;i++){const t=waxing?Math.PI/2-Math.PI*i/40:3*Math.PI/2-Math.PI*i/40;points.push([cx+sign*r*Math.cos(2*Math.PI*target)*Math.cos(t),cy+r*Math.sin(t)]);}
+  const d=points.map((p,i)=>(i?"L":"M")+p[0].toFixed(2)+" "+p[1].toFixed(2)).join(" ")+" Z";
+  add("path",{d,fill:"#f4e7b6"});
  }
- svg.appendChild(g);
- return svg;
+ svg.appendChild(g);return svg;
 }
 const base=baseDate();
 document.getElementById("intro").textContent="A partir de "+base.toLocaleDateString("pt-BR",{day:"numeric",month:"long"})+", veja quando serão as próximas quatro fases.";
