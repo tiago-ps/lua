@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101b35">
+<meta name="description" content="Veja as próximas quatro fases da Lua.">
+<title>Próximas luas</title>
+<style>
+:root{color-scheme:dark;font-family:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:#101b35;color:#fff}
+main{min-height:100vh;padding:18px 18px 28px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:clamp(2.4rem,8vw,4.5rem);line-height:1.1;text-align:center;margin:8px 0 6px}
+#intro{font-size:clamp(1.15rem,3.5vw,1.6rem);text-align:center;max-width:760px;color:#dce6fa;margin:0 0 20px}
+.grid{width:min(100%,900px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{background:#1d2b49;border-radius:24px;padding:18px 14px;text-align:center}
+.card svg{width:min(100%,170px);height:auto;filter:drop-shadow(0 0 20px #dce8ff44)}
+.name{font-size:clamp(1.6rem,5vw,2.5rem);font-weight:800;margin:8px 0}
+.date{display:inline-block;border:0;border-radius:18px;padding:13px 18px;background:#f4d77c;color:#101b35;font-size:clamp(1.15rem,3.5vw,1.5rem);font-weight:800;cursor:pointer}
+.date:focus-visible,.back:focus-visible{outline:4px solid #7ed6ff;outline-offset:4px}
+.back{margin-top:20px;border:0;border-radius:18px;padding:14px 22px;min-height:58px;background:#f3f5fb;color:#101b35;font-size:1.2rem;font-weight:800;cursor:pointer}
+@media(max-width:600px){.grid{grid-template-columns:1fr 1fr;gap:10px}.card{padding:12px 8px;border-radius:20px}.card svg{width:min(100%,125px)}}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.card svg{width:min(100%,160px)}}
+</style>
+</head>
+<body>
+<main>
+<h1>Próximas luas</h1>
+<p id="intro"></p>
+<div class="grid" id="grid"></div>
+<button class="back" id="back" type="button">◀ Voltar</button>
+</main>
+<script>
+(function(){
+const synodic=29.530588853,reference=Date.UTC(2000,0,6,18,14);
+const phases=[
+ {name:"Lua nova",target:0},
+ {name:"Lua crescente",target:.25},
+ {name:"Lua cheia",target:.5},
+ {name:"Lua minguante",target:.75}
+];
+function baseDate(){
+ const value=new URLSearchParams(location.search).get("date");
+ if(/^\d{4}-\d{2}-\d{2}$/.test(value||"")){
+  const p=value.split("-").map(Number),d=new Date(p[0],p[1]-1,p[2],12);
+  if(!Number.isNaN(d.getTime()))return d;
+ }
+ const d=new Date();d.setHours(12,0,0,0);return d;
+}
+function age(date){return ((date.getTime()-reference)/86400000%synodic+synodic)%synodic}
+function nextPhase(base,target){
+ const targetAge=target*synodic;
+ let days=(targetAge-age(base)+synodic)%synodic;
+ if(days<.01)days=synodic;
+ const d=new Date(base);d.setDate(d.getDate()+Math.ceil(days));d.setHours(12,0,0,0);return d;
+}
+function moonSvg(target){
+ const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+ svg.setAttribute("viewBox","0 0 300 300");svg.setAttribute("aria-hidden","true");
+ const defs=document.createElementNS("http://www.w3.org/2000/svg","defs");
+ const clip=document.createElementNS("http://www.w3.org/2000/svg","clipPath");clip.id="clip";
+ const circle=document.createElementNS("http://www.w3.org/2000/svg","circle");circle.setAttribute("cx","150");circle.setAttribute("cy","150");circle.setAttribute("r","112");clip.appendChild(circle);defs.appendChild(clip);svg.appendChild(defs);
+ const base=document.createElementNS("http://www.w3.org/2000/svg","circle");base.setAttribute("cx","150");base.setAttribute("cy","150");base.setAttribute("r","112");base.setAttribute("fill","#263653");svg.appendChild(base);
+ const g=document.createElementNS("http://www.w3.org/2000/svg","g");g.setAttribute("clip-path","url(#clip)");
+ const bright=document.createElementNS("http://www.w3.org/2000/svg","circle");bright.setAttribute("cx","150");bright.setAttribute("cy","150");bright.setAttribute("r","112");bright.setAttribute("fill","#f4e7b6");g.appendChild(bright);
+ const f=target;
+ if(f>0&&f<1){
+  const rx=Math.max(1,Math.abs(Math.cos(2*Math.PI*f))*112);
+  const shadow=document.createElementNS("http://www.w3.org/2000/svg","path");
+  if(f<.5)shadow.setAttribute("d","M150 38 A112 112 0 1 0 150 262 A"+rx+" 112 0 0 1 150 38");
+  else shadow.setAttribute("d","M150 38 A112 112 0 1 1 150 262 A"+rx+" 112 0 0 0 150 38");
+  shadow.setAttribute("fill","#263653");g.appendChild(shadow);
+ }
+ svg.appendChild(g);
+ return svg;
+}
+const base=baseDate();
+document.getElementById("intro").textContent="A partir de "+base.toLocaleDateString("pt-BR",{day:"numeric",month:"long"})+", veja quando serão as próximas quatro fases.";
+const grid=document.getElementById("grid");
+phases.forEach(p=>{
+ const date=nextPhase(base,p.target);
+ const card=document.createElement("article");card.className="card";
+ card.appendChild(moonSvg(p.target));
+ const name=document.createElement("div");name.className="name";name.textContent=p.name;card.appendChild(name);
+ const button=document.createElement("button");button.className="date";button.type="button";button.textContent=date.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+ button.addEventListener("click",()=>{location.href="./?date="+date.toISOString().slice(0,10);});
+ card.appendChild(button);grid.appendChild(card);
+});
+document.getElementById("back").addEventListener("click",()=>{location.href="./?date="+base.toISOString().slice(0,10);});
+})();
+</script>
+</body>
+</html>
